@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Reads your Claude Code and OpenAI Codex CLI session history and draws what you actually built.
+  Reads your Claude Code, Pi, Google Antigravity, and OpenAI Codex CLI session history and draws what you actually built.
 </p>
 
 <p align="center">
@@ -187,6 +187,8 @@ they are building.
 cmd/bough        the command
 internal/agent   the boundary between bough and the agents it reads
   .../claude     reading Claude Code
+  .../pi         reading Pi coding agent
+  .../antigravity reading Google Antigravity (AGY CLI / IDE)
   .../codex      reading OpenAI Codex CLI rollouts
 internal/segment prompts into tasks
 internal/rollup  tasks into sittings, and the links between them
@@ -215,8 +217,8 @@ work, on three projects, and it picked out the sittings they remembered as the
 hard ones. That is why it exists. It is one person checking a score fitted to
 their own history, which is why it is still off by default.
 
-Claude Code and OpenAI Codex CLI are supported so far. The seam for adding
-another agent is documented in `internal/agent`.
+Claude Code, Pi, Google Antigravity, and OpenAI Codex CLI are supported. The
+seam for adding another agent is documented in `internal/agent`.
 
 ## Contributing
 

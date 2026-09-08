@@ -18,8 +18,10 @@ import (
 	"golang.org/x/term"
 
 	"github.com/nickelsec/bough/internal/agent"
+	"github.com/nickelsec/bough/internal/agent/antigravity"
 	"github.com/nickelsec/bough/internal/agent/claude"
 	"github.com/nickelsec/bough/internal/agent/codex"
+	"github.com/nickelsec/bough/internal/agent/pi"
 	"github.com/nickelsec/bough/internal/banner"
 	"github.com/nickelsec/bough/internal/graph"
 	"github.com/nickelsec/bough/internal/pick"
@@ -92,7 +94,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 		out       = fs.String("o", "", "write to this file instead of standard output")
 		showVer   = fs.Bool("version", false, "print the version and stop")
 		noRepo    = fs.Bool("no-repo", false, "do not read the project's git history")
-		agentFlag = fs.String("agent", "all", "which agent history to read: claude, codex, or all")
+		agentFlag = fs.String("agent", "all", "which agent history to read: claude, pi, antigravity, codex, or all")
 	)
 	fs.Usage = func() {
 		fmt.Fprint(stderr, usage)
@@ -117,6 +119,10 @@ func run(args []string, stdout, stderr io.Writer) error {
 	switch strings.ToLower(*agentFlag) {
 	case "claude", "claude-code":
 		sources = []agent.Source{claude.Source{Root: *root}}
+	case "pi":
+		sources = []agent.Source{pi.Source{Root: *root}}
+	case "antigravity", "agy":
+		sources = []agent.Source{antigravity.Source{Root: *root}}
 	case "codex":
 		sources = []agent.Source{codex.Source{Root: *root}}
 	case "all", "":
@@ -127,11 +133,13 @@ func run(args []string, stdout, stderr io.Writer) error {
 		} else {
 			sources = []agent.Source{
 				claude.Source{},
+				pi.Source{},
+				antigravity.Source{},
 				codex.Source{},
 			}
 		}
 	default:
-		return fmt.Errorf("unknown agent %q; supported: claude, codex, all", *agentFlag)
+		return fmt.Errorf("unknown agent %q; supported: claude, pi, antigravity, codex, all", *agentFlag)
 	}
 
 	sourcesMap := make(map[string]agent.Source, len(sources))
@@ -145,8 +153,15 @@ func run(args []string, stdout, stderr io.Writer) error {
 		projects = append(projects, found...)
 	}
 	if len(projects) == 0 {
-		if len(sources) == 1 && sources[0].Name() == "codex" {
-			return errors.New("no Codex history found; looked in ~/.codex/sessions")
+		if len(sources) == 1 {
+			switch sources[0].Name() {
+			case "pi":
+				return errors.New("no Pi history found; looked in ~/.pi/agent/sessions")
+			case "antigravity":
+				return errors.New("no Antigravity history found; looked in ~/.gemini/antigravity-cli/brain")
+			case "codex":
+				return errors.New("no Codex history found; looked in ~/.codex/sessions")
+			}
 		}
 		return errors.New("no Claude Code history found; looked in ~/.claude/projects")
 	}
@@ -433,7 +448,7 @@ const usage = `bough shows the shape of the work in a project's AI coding histor
   bough --json       write the graph as JSON
   bough --version    print the version
   bough --no-repo    leave the project's git history unread
-  bough --agent=codex read only a specific agent (claude, codex, all)
+  bough --agent=codex read only a specific agent (claude, pi, antigravity, codex, all)
 
 Anything piped or redirected is written as text, so bough > notes.txt and
 bough | less behave as you would expect.

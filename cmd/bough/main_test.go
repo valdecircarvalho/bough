@@ -81,6 +81,52 @@ func TestAgentFlagCodex(t *testing.T) {
 	}
 }
 
+func TestAgentFlagPi(t *testing.T) {
+	root := t.TempDir()
+	proj := filepath.Join(root, "--work-my-pi-project--")
+	if err := os.MkdirAll(proj, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	transcript := filepath.Join(proj, "sess.jsonl")
+	data := `{"type":"session","version":3,"id":"s1","cwd":"/work/my-pi-project"}
+{"type":"message","id":"m1","message":{"role":"user","content":[{"type":"text","text":"start app"}]}}
+`
+	if err := os.WriteFile(transcript, []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	var out, errs bytes.Buffer
+	if err := run([]string{"--list", "--agent", "pi", "--root", root}, &out, &errs); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "my-pi-project") {
+		t.Errorf("expected listing to include project 'my-pi-project', got:\n%s", out.String())
+	}
+}
+
+func TestAgentFlagAntigravity(t *testing.T) {
+	root := t.TempDir()
+	convDir := filepath.Join(root, "c1", ".system_generated", "logs")
+	if err := os.MkdirAll(convDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	transcript := filepath.Join(convDir, "transcript.jsonl")
+	data := `{"step_index":0,"source":"USER_EXPLICIT","type":"USER_INPUT","content":"<USER_INFORMATION>\n[URI] -> [CorpusName]:\n/work/my-agy-project -> test\n</USER_INFORMATION>\n<USER_REQUEST>\nbuild it\n</USER_REQUEST>"}
+{"step_index":1,"source":"MODEL","type":"PLANNER_RESPONSE","tool_calls":[{"TypeName":"write_to_file","Args":{"TargetFile":"/work/my-agy-project/main.go","CodeContent":"package main\n"}}]}
+`
+	if err := os.WriteFile(transcript, []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	var out, errs bytes.Buffer
+	if err := run([]string{"--list", "--agent", "antigravity", "--root", root}, &out, &errs); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "my-agy-project") {
+		t.Errorf("expected listing to include project 'my-agy-project', got:\n%s", out.String())
+	}
+}
+
 func TestAgentFlagUnknown(t *testing.T) {
 	var out, errs bytes.Buffer
 	err := run([]string{"--list", "--agent", "unknown"}, &out, &errs)
